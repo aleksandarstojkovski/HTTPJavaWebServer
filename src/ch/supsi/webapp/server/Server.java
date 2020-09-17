@@ -87,7 +87,17 @@ public class Server {
 	 * 
 	 */
 	private static Content handleResponseContent(Request request) {
-		return new Content("Il mio primo documento HTML5".getBytes());
+		String body = "<!DOCTYPE html>" + LINEBREAK +
+				"<html>" + LINEBREAK +
+				"<head>" + LINEBREAK +
+				"<meta charset=\"UTF-8\">" + LINEBREAK +
+				"<title>Prova</title>" + LINEBREAK +
+				"</head>" + LINEBREAK +
+				"<body>" + LINEBREAK +
+				"Il mio primo documento HTML5" + LINEBREAK +
+				"</body>" + LINEBREAK +
+				"</html>";
+		return new Content(body.getBytes());
 	}
 
 	/*
@@ -95,7 +105,7 @@ public class Server {
 	 * 
 	 */
 	private static void produceResponse(OutputStream output, Content responseContent) throws IOException {
-		String body =
+		String headers =
 				"HTTP/1.1 200 OK" + LINEBREAK +
 				"Date: Sun, 10 Oct 2010 23:26:07 GMT" + LINEBREAK +
 				"Server: Apache/2.2.8 (Ubuntu) mod_ssl/2.2.8 OpenSSL/0.9.8g" + LINEBREAK +
@@ -105,10 +115,10 @@ public class Server {
 				"Content-Length: " +responseContent.length+ LINEBREAK +
 				"Connection: close" + LINEBREAK +
 				"Content-Type: text/html" + LINEBREAK
-				+ LINEBREAK +
-				new String(responseContent.content);
+				+ LINEBREAK
+				+ new String(responseContent.content);
 		// usare la variabile LINEBREAK per andare a capo
-		output.write(body.getBytes());
+		output.write(headers.getBytes());
 	}
 
 }
