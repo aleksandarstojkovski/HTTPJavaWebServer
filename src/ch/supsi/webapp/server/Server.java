@@ -1,11 +1,11 @@
 package ch.supsi.webapp.server;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Server {
@@ -87,17 +87,42 @@ public class Server {
 	 * 
 	 */
 	private static Content handleResponseContent(Request request) {
-		String body = "<!DOCTYPE html>" + LINEBREAK +
-				"<html>" + LINEBREAK +
-				"<head>" + LINEBREAK +
-				"<meta charset=\"UTF-8\">" + LINEBREAK +
-				"<title>Prova</title>" + LINEBREAK +
-				"</head>" + LINEBREAK +
-				"<body>" + LINEBREAK +
-				"Il mio primo documento HTML5" + LINEBREAK +
-				"</body>" + LINEBREAK +
-				"</html>";
-		return new Content(body.getBytes());
+
+		String fileName = request.resource.replace("/","");
+		File file = new File(fileName);
+		boolean fileExists = file.exists();
+		String body = null;
+		String returnCode = "200 OK";
+
+		if (!fileExists){
+			fileName="404.html";
+			returnCode="404 Not Found";
+		}
+
+		try {
+			body = new String(Files.readAllBytes(Paths.get(fileName)));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+//		String body = "<!DOCTYPE html>\n" +
+//				"<html>\n" +
+//				"<head>\n" +
+//				"<meta charset=\"UTF-8\">\n" +
+//				"<title>Prova</title>\n" +
+//				"</head>\n" +
+//				"<body>\n" +
+//				"Il mio primo documento HTML5 <br>\n" +
+//				"Data attuale: " + new Date() +"\n" +
+//				"<p>La domanda</p>\n" +
+//				"<form method=\"GET\">\n" +
+//				"<input name=\"name\" type=\"text\" />\n" +
+//				"<input type=\"submit\"/>\n" +
+//				" </form>\n"+
+//				"</body>\n" +
+//				"</html>";
+
+		return new Content(body.getBytes(), returnCode);
 	}
 
 	/*
@@ -105,11 +130,12 @@ public class Server {
 	 * 
 	 */
 	private static void produceResponse(OutputStream output, Content responseContent) throws IOException {
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss");
 		String headers =
-				"HTTP/1.1 200 OK" + LINEBREAK +
-				"Date: Sun, 10 Oct 2010 23:26:07 GMT" + LINEBREAK +
+				"HTTP/1.1 " + responseContent.returnCode + LINEBREAK +
+				"Date: " +sdf.format(new Date()) + " GMT+2" + LINEBREAK +
 				"Server: Apache/2.2.8 (Ubuntu) mod_ssl/2.2.8 OpenSSL/0.9.8g" + LINEBREAK +
-				"Last-Modified: Sun, 26 Sep 2010 22:04:35 GMT" + LINEBREAK +
+				"Last-Modified: " +sdf.format(new Date()) + " GMT+2" + LINEBREAK +
 				"ETag: \"45b6-834-49130cc1182c0\"" + LINEBREAK +
 				"Accept-Ranges: bytes" + LINEBREAK +
 				"Content-Length: " +responseContent.length+ LINEBREAK +
