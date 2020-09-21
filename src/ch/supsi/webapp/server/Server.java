@@ -91,18 +91,42 @@ public class Server {
 		String fileName = request.resource.replace("/","");
 		File file = new File(fileName);
 		boolean fileExists = file.exists();
-		String body = null;
-		String returnCode = "200 OK";
-
-		if (!fileExists){
-			fileName="404.html";
-			returnCode="404 Not Found";
-		}
+		String mimetype = null;
+		String contentType = null;
+		byte[] bytesToReturn = new byte[0];
 
 		try {
-			body = new String(Files.readAllBytes(Paths.get(fileName)));
+			mimetype = Files.probeContentType(file.toPath());
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+		String body = null;
+		String returnCode = null;
+
+		if (!fileExists){
+			System.out.println("File "+fileName+" does not exist.");
+			fileName="404.html";
+			returnCode="404 Not Found";
+		} else {
+			System.out.println("File "+fileName+" exist.");
+			returnCode="200 OK";
+		}
+
+		if (mimetype != null && mimetype.split("/")[0].equals("image")) {
+			contentType="image/png";
+			//returnCode="304 Not Modified";
+			try {
+				bytesToReturn = Files.readAllBytes(file.toPath());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			contentType="text/html";
+			try {
+				bytesToReturn = new String(Files.readAllBytes(Paths.get(fileName))).getBytes();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 
 //		String body = "<!DOCTYPE html>\n" +
@@ -122,7 +146,7 @@ public class Server {
 //				"</body>\n" +
 //				"</html>";
 
-		return new Content(body.getBytes(), returnCode);
+		return new Content(bytesToReturn, returnCode, contentType);
 	}
 
 	/*
@@ -140,8 +164,7 @@ public class Server {
 				"Accept-Ranges: bytes" + LINEBREAK +
 				"Content-Length: " +responseContent.length+ LINEBREAK +
 				"Connection: close" + LINEBREAK +
-				"Content-Type: text/html" + LINEBREAK
-				+ LINEBREAK
+				"Content-Type: " + responseContent.contentType + LINEBREAK + LINEBREAK
 				+ new String(responseContent.content);
 		// usare la variabile LINEBREAK per andare a capo
 		output.write(headers.getBytes());
