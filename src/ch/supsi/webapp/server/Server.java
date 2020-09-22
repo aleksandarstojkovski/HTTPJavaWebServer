@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.Base64;
 import java.util.Date;
 
 public class Server {
@@ -92,7 +93,8 @@ public class Server {
 		File file = new File(fileName);
 		boolean fileExists = file.exists();
 		String mimetype = null;
-		String contentType = null;
+		String contentType;
+		String returnCode;
 		byte[] bytesToReturn = new byte[0];
 
 		try {
@@ -100,20 +102,18 @@ public class Server {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String body = null;
-		String returnCode = null;
 
 		if (!fileExists){
-			System.out.println("File "+fileName+" does not exist.");
+			System.out.println("DEBUG: File "+fileName+" does not exist.");
 			fileName="404.html";
 			returnCode="404 Not Found";
 		} else {
-			System.out.println("File "+fileName+" exist.");
+			System.out.println("DEBUG: File "+fileName+" exist.");
 			returnCode="200 OK";
 		}
 
 		if (mimetype != null && mimetype.split("/")[0].equals("image")) {
-			contentType="image/png";
+			contentType="image/jpeg";
 			//returnCode="304 Not Modified";
 			try {
 				bytesToReturn = Files.readAllBytes(file.toPath());
@@ -157,16 +157,12 @@ public class Server {
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss");
 		String headers =
 				"HTTP/1.1 " + responseContent.returnCode + LINEBREAK +
-				"Date: " +sdf.format(new Date()) + " GMT+2" + LINEBREAK +
-				"Server: Apache/2.2.8 (Ubuntu) mod_ssl/2.2.8 OpenSSL/0.9.8g" + LINEBREAK +
-				"Last-Modified: " +sdf.format(new Date()) + " GMT+2" + LINEBREAK +
-				"ETag: \"45b6-834-49130cc1182c0\"" + LINEBREAK +
-				"Accept-Ranges: bytes" + LINEBREAK +
-				"Content-Length: " +responseContent.length+ LINEBREAK +
-				"Connection: close" + LINEBREAK +
-				"Content-Type: " + responseContent.contentType + LINEBREAK + LINEBREAK
-				+ new String(responseContent.content);
+				"Content-Type: " + responseContent.contentType + LINEBREAK +
+		        "Content-Length: " +responseContent.length + LINEBREAK +
+				LINEBREAK +
+				new String(responseContent.content);
 		// usare la variabile LINEBREAK per andare a capo
+
 		output.write(headers.getBytes());
 	}
 
